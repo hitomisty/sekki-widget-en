@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>24 Solar Terms Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif&display=swap" rel="stylesheet">
+  <style>
+    .swh-widget-wrapper * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    .swh-widget-wrapper {
+      font-family: 'Noto Serif', serif !important;
+      background-color: #f5f3eb !important;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px) !important;
+      background-size: 20px 20px !important;
+      color: #333 !important;
+      text-align: center !important;
+      padding: 2em !important;
+      border: 1px solid #ddd !important;
+      border-radius: 12px !important;
+      max-width: 320px !important;
+      margin: 0 auto !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+      font-size: 16px !important;
+      line-height: 1.5 !important;
+    }
+
+    .swh-sekki-prefix {
+      font-size: 1.1em !important;
+      color: #666 !important;
+      margin-bottom: 0.3em !important;
+    }
+
+    .swh-sekki-label {
+      font-size: 1.4em !important;
+      font-weight: bold !important;
+      margin: 0.3em 0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .swh-sekki-description {
+      font-size: 0.9em !important;
+      color: #555 !important;
+      margin-top: 0.8em !important;
+      line-height: 1.4 !important;
+    }
+
+    @media (max-width: 360px) {
+      .swh-widget-wrapper {
+        max-width: 90vw !important;
+        padding: 1.5em !important;
+      }
+      .swh-sekki-label {
+        font-size: 1.2em !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="swh-widget-wrapper">
+    <div class="swh-sekki-prefix">Current season:</div>
+    <div class="swh-sekki-label" id="swh-sekkiLabel">Loading…</div>
+    <div class="swh-sekki-description" id="swh-sekkiDesc"></div>
+  </div>
+
+  <script>
+    (function() {
+      // English text (polished by Claude)
+      const sekkiInfo = [
+        ["Risshun (立春)", "The beginning of spring. Signs of new life stir within the cold.", "Honor winter's fatigue and gently awaken your body."],
+        ["Usui (雨水)", "Snow turns to rain, and the thaw begins.", "Support circulation and prepare for dampness."],
+        ["Keichitsu (啓蟄)", "Insects emerge from their winter rest.", "Move gently to align with spring's rhythm."],
+        ["Shunbun (春分)", "Day and night become nearly equal.", "Notice the balance between mind and body."],
+        ["Seimei (清明)", "Plants bud and pure energy fills the air.", "Step outside and meet the season."],
+        ["Kokuu (穀雨)", "Gentle rains nourish the grains.", "Tend to your meals and nourish from within."],
+        ["Rikka (立夏)", "The first hints of summer appear.", "Find your pace and keep space in your mind."],
+        ["Shōman (小満)", "Plants grow and begin to fill out.", "Honor your rhythm as you move forward."],
+        ["Bōshu (芒種)", "The season for planting rice. Humidity rises.", "Be kind to your stomach and keep your body light."],
+        ["Geshi (夏至)", "The longest day of the year.", "Rest often and breathe deeply."],
+        ["Shōsho (小暑)", "The real heat is beginning.", "Preserve moisture and ease into summer."],
+        ["Taisho (大暑)", "The hottest time of the year.", "Go easy on cold foods and tend to yourself from the inside."],
+        ["Risshū (立秋)", "Autumn begins, according to the calendar.", "Breathe deeply and release summer's weight."],
+        ["Shosho (処暑)", "The heat begins to fade.", "Mind the shifts in temperature and move gently."],
+        ["Hakuro (白露)", "White dew settles on the grass.", "Keep warm as mornings and evenings grow cool."],
+        ["Shūbun (秋分)", "Day and night are equal once more.", "Turn inward and meet the quiet."],
+        ["Kanro (寒露)", "The dew turns cold.", "Care for your lungs and guard against dryness."],
+        ["Sōkō (霜降)", "Frost begins to fall, and winter draws near.", "Warm yourself with gentle drinks."],
+        ["Rittō (立冬)", "Winter begins, according to the calendar.", "Keep your neck and belly warm."],
+        ["Shōsetsu (小雪)", "Light snow begins to fall.", "Breathe deeply and replenish moisture."],
+        ["Taisetsu (大雪)", "Snow falls in earnest.", "Don't let cold settle in. Stay warm."],
+        ["Tōji (冬至)", "The shortest day of the year.", "Rest in the stillness."],
+        ["Shōkan (小寒)", "The cold deepens.", "Eat warm foods and nourish from within."],
+        ["Daikan (大寒)", "The coldest time of the year.", "Rest your body in the quiet and gather energy for spring."]
+      ];
+
+      // Dates are the same as the Japanese version (kept as-is)
+      const sekki2025Dates = [
+        new Date(2025, 1, 3), new Date(2025, 1, 18), new Date(2025, 2, 5),
+        new Date(2025, 2, 20), new Date(2025, 3, 4), new Date(2025, 3, 20),
+        new Date(2025, 4, 5), new Date(2025, 4, 21), new Date(2025, 5, 5),
+        new Date(2025, 5, 21), new Date(2025, 6, 7), new Date(2025, 6, 22),
+        new Date(2025, 7, 7), new Date(2025, 7, 23), new Date(2025, 8, 7),
+        new Date(2025, 8, 23), new Date(2025, 9, 8), new Date(2025, 9, 23),
+        new Date(2025, 10, 7), new Date(2025, 10, 22), new Date(2025, 11, 7),
+        new Date(2025, 11, 22), new Date(2026, 0, 5), new Date(2026, 0, 20)
+      ];
+
+      function getCurrentSekki() {
+        const today = new Date();
+        const year = today.getFullYear();
+
+        if (year === 2025 || year === 2026) {
+          if (today < sekki2025Dates[0]) return sekkiInfo[23];
+
+          for (let i = sekki2025Dates.length - 1; i >= 0; i--) {
+            if (today >= sekki2025Dates[i]) {
+              return sekkiInfo[i];
+            }
+          }
+        } else {
+          let risshunDate = new Date(year, 1, 4);
+          const sekkiDates = [];
+          for (let i = 0; i < 24; i++) {
+            const date = new Date(risshunDate);
+            date.setDate(date.getDate() + i * 15);
+            sekkiDates.push(date);
+          }
+
+          if (today < sekkiDates[0]) return sekkiInfo[23];
+
+          for (let i = sekkiDates.length - 1; i >= 0; i--) {
+            if (today >= sekkiDates[i]) {
+              return sekkiInfo[i];
+            }
+          }
+        }
+
+        return sekkiInfo[0];
+      }
+
+      function initWidget() {
+        const labelElement = document.getElementById("swh-sekkiLabel");
+        const descElement = document.getElementById("swh-sekkiDesc");
+
+        if (labelElement && descElement) {
+          const [name, desc, advice] = getCurrentSekki();
+          labelElement.textContent = name;
+          descElement.innerHTML = `${desc}<br>${advice}`;
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWidget);
+      } else {
+        initWidget();
+      }
+    })();
+  </script>
+</body>
+</html>
