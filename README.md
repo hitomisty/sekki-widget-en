@@ -1,6 +1,3 @@
-# sekki-widget-en
-A minimalist widget that displays Japan’s 24 Solar Terms (Sekki) in English.
-
 # 24 Solar Terms Widget (Sekki Widget)
 
 A simple, minimalist widget that shows the current **Japanese 24 Solar Terms (Nijūshi Sekki)** in English.
@@ -61,14 +58,14 @@ Copy and paste this iframe into your HTML:
   frameborder="0"
   style="border-radius: 12px;"
 ></iframe>
+```
 
 Adjust the size:
-
-Change the width and height values as needed
+- Change the width and height values as needed
 
 ---
 
-License
+### License
 
 Released under the MIT License.
 You are free to use, modify, and redistribute it for personal or commercial projects.
