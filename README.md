@@ -17,7 +17,7 @@ Embed it in Notion or your blog to stay in tune with the seasonal rhythm.
 - Automatically displays the current solar term based on today’s date
 - Includes a short seasonal note and a gentle self-care suggestion
 - Switches terms using an approximate 15-day interval logic
-  - (Future improvement idea: higher accuracy via an astronomy library or API)
+  →　Confirmed that the dates for all 24 solar terms match the 2026 Calendar Calendar (Reki Yoko) published by NAOJ (National Astronomical Observatory of Japan).
 - Calm, neutral design that blends well into blogs and dashboards
 - Minimal layout that looks good on mobile
 
