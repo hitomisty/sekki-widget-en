@@ -70,7 +70,8 @@
 
   <script>
     (function() {
-      // English text (polished by Claude)
+      // The 24 solar terms, starting from Risshun (solar longitude 315°),
+      // in 15° increments.
       const sekkiInfo = [
         ["Risshun (立春)", "The beginning of spring. Signs of new life stir within the cold.", "Honor winter's fatigue and gently awaken your body."],
         ["Usui (雨水)", "Snow turns to rain, and the thaw begins.", "Support circulation and prepare for dampness."],
@@ -98,65 +99,45 @@
         ["Daikan (大寒)", "The coldest time of the year.", "Rest your body in the quiet and gather energy for spring."]
       ];
 
-      // 2026年度の日付リスト (24項目) に差し替え
-      const sekki2025Dates = [
-        new Date(2026, 1, 4),  // Risshun
-        new Date(2026, 1, 19), // Usui
-        new Date(2026, 2, 5),  // Keichitsu
-        new Date(2026, 2, 20), // Shunbun (3/20)
-        new Date(2026, 3, 4),  // Seimei
-        new Date(2026, 3, 20), // Kokuu
-        new Date(2026, 4, 5),  // Rikka
-        new Date(2026, 4, 21), // Shōman
-        new Date(2026, 5, 5),  // Bōshu
-        new Date(2026, 5, 21), // Geshi
-        new Date(2026, 6, 7),  // Shōsho
-        new Date(2026, 6, 23), // Taisho
-        new Date(2026, 7, 7),  // Risshū
-        new Date(2026, 7, 23), // Shosho
-        new Date(2026, 8, 7),  // Hakuro
-        new Date(2026, 8, 23), // Shūbun
-        new Date(2026, 9, 8),  // Kanro
-        new Date(2026, 9, 23), // Sōkō
-        new Date(2026, 10, 7), // Rittō
-        new Date(2026, 10, 22),// Shōsetsu
-        new Date(2026, 11, 7), // Taisetsu
-        new Date(2026, 11, 22),// Tōji
-        new Date(2027, 0, 5),  // Shōkan
-        new Date(2027, 0, 20)  // Daikan
-      ];
+      // Computes the Sun's apparent ecliptic longitude (degrees), using the
+      // simplified formulas from Jean Meeus, "Astronomical Algorithms".
+      // Accuracy is about 0.01° (roughly ±15 minutes in time), which is
+      // sufficient for determining the calendar date of each solar term.
+      // No date tables are needed, so the widget keeps working year after
+      // year without maintenance (practically valid until around 2100).
+      function solarLongitude(date) {
+        const JD = date.getTime() / 86400000 + 2440587.5; // Julian Day
+        const T = (JD - 2451545.0) / 36525;               // centuries since J2000.0
+        const rad = Math.PI / 180;
+        const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T; // mean longitude
+        const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) * rad; // mean anomaly
+        const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M)
+                + (0.019993 - 0.000101 * T) * Math.sin(2 * M)
+                + 0.000289 * Math.sin(3 * M); // equation of center
+        const omega = (125.04 - 1934.136 * T) * rad;
+        // Apparent longitude, corrected for nutation and aberration
+        let lambda = L0 + C - 0.00569 - 0.00478 * Math.sin(omega);
+        return ((lambda % 360) + 360) % 360;
+      }
+
+      // Returns the end of the given moment's day in Japan Standard Time
+      // (i.e., the next midnight JST). By calendar convention in Japan, the
+      // day a solar term begins counts as that term from midnight, so we
+      // check whether the Sun crosses the 15° boundary by the end of the
+      // JST day. This gives the same result as the official Japanese
+      // calendar regardless of the viewer's local timezone.
+      function endOfJstDay(date) {
+        const JST_OFFSET = 9 * 3600000;
+        const jstMs = date.getTime() + JST_OFFSET;
+        const jstDayStart = Math.floor(jstMs / 86400000) * 86400000;
+        return new Date(jstDayStart + 86400000 - JST_OFFSET);
+      }
 
       function getCurrentSekki() {
-        const today = new Date();
-        const year = today.getFullYear();
-
-        if (year === 2025 || year === 2026) {
-          if (today < sekki2025Dates[0]) return sekkiInfo[23];
-
-          for (let i = sekki2025Dates.length - 1; i >= 0; i--) {
-            if (today >= sekki2025Dates[i]) {
-              return sekkiInfo[i];
-            }
-          }
-        } else {
-          let risshunDate = new Date(year, 1, 4);
-          const sekkiDates = [];
-          for (let i = 0; i < 24; i++) {
-            const date = new Date(risshunDate);
-            date.setDate(date.getDate() + i * 15);
-            sekkiDates.push(date);
-          }
-
-          if (today < sekkiDates[0]) return sekkiInfo[23];
-
-          for (let i = sekkiDates.length - 1; i >= 0; i--) {
-            if (today >= sekkiDates[i]) {
-              return sekkiInfo[i];
-            }
-          }
-        }
-
-        return sekkiInfo[0];
+        const lambda = solarLongitude(endOfJstDay(new Date()));
+        // Map so that longitude 315° (Risshun) becomes sekkiInfo[0]
+        const index = (Math.floor(lambda / 15) + 3) % 24;
+        return sekkiInfo[index];
       }
 
       function initWidget() {
